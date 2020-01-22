@@ -1,6 +1,6 @@
-## Evaluating Weakly-Supervised Object Localization Right
+## Evaluating Weakly Supervised Object Localization Methods Right
 
-[Evaluating Weakly-Supervised Object Localization Right](https://arxiv.org/abs/2001.07437)
+[Evaluating Weakly Supervised Object Localization Methods Right](https://arxiv.org/abs/2001.07437)
 
 Junsuk Choe<sup>1,3*</sup>, Seong Joon Oh<sup>2*</sup>, Seungho Lee<sup>1</sup>, 
 Sanghyuk Chun<sup>3</sup>, Zeynep Akata<sup>4</sup>, Hyunjung Shim<sup>1</sup>  
