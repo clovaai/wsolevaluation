@@ -1,5 +1,7 @@
 ## Evaluating Weakly-Supervised Object Localization Right
 
+[Evaluating Weakly-Supervised Object Localization Right](https://arxiv.org/abs/2001.07437)
+
 Junsuk Choe<sup>1,3*</sup>, Seong Joon Oh<sup>2*</sup>, Seungho Lee<sup>1</sup>, 
 Sanghyuk Chun<sup>3</sup>, Zeynep Akata<sup>4</sup>, Hyunjung Shim<sup>1</sup>  
 <sub>\* Equal contribution</sub>
@@ -550,5 +552,10 @@ See [config.py](config.py) for the full descriptions of the arguments, especiall
 ## 7. How to cite
 
 ```
-@article{}
+@article{wsoleval,
+  title={Evaluating Weakly Supervised Object Localization Methods Right},
+  author={Choe, Junsuk and Oh, Seong Joon and Lee, Seungho and Chun, Sanghyuk and Akata, Zeynep and Shim, Hyunjung},
+  journal={arXiv preprint arXiv:2001.07437},
+  year={2020}
+}
 ```
