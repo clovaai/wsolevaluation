@@ -56,13 +56,14 @@ outperforms existing WSOL methods.
     + [Evaluate your heatmaps](#evaluate-your-heatmaps)
     + [Testing the evaluation code](#testing-the-evaluation-code)
 * [5. Library of WSOL methods](#5-library-of-wsol-methods)
-* [6. WSOL training and evaluation](#6-wsol-training-and-evaluataion)
+* [6. WSOL training and evaluation](#6-wsol-training-and-evaluation)
     + [Prepare train+eval datasets](#prepare-traineval-datasets)
         - [ImageNet](#imagenet)
         - [CUB](#cub)
         - [OpenImages](#openimages)
     + [Run train+eval](#run-traineval)
-* [7. How to cite](#7-how-to-cite)
+* [7. Code license](#7-code-license)
+* [8. How to cite](#8-how-to-cite)
 
 ## 1. Our dataset contribution
 
@@ -172,28 +173,7 @@ Below tables summarizes dataset statistics of each split.
 
 #### Licenses 
 
-This project is distributed under MIT license.
-
-```
-Copyright (c) 2020-present NAVER Corp.
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
-The licenses corresponds to our dataset contribution are summarized as follows
+The licenses corresponding to our dataset contribution are summarized as follows
 
 Dataset    | Images                                   | Class Annotations | Localization Annotations
 -----------|------------------------------------------|-------------------|----------------
@@ -368,7 +348,7 @@ the [wsol](wsol) folder. Please add your own WSOL method in the list by making
 a pull request.
 
 We provide the full training and evaluation scripts on the provided WSOL methods. 
-Details will be explained in the [next section](#5-wsol-training-and-evaluataion).
+Details will be explained in the [next section](#5-wsol-training-and-evaluation).
 
 Method | Paper | Original code
 -- | -- | --
@@ -379,7 +359,7 @@ Self-Produced Guidance (SPG) | [ECCV'18](http://openaccess.thecvf.com/content_EC
 Attention-based Dropout Layer (ADL) | [CVPR'19](http://openaccess.thecvf.com/content_CVPR_2019/papers/Choe_Attention-Based_Dropout_Layer_for_Weakly_Supervised_Object_Localization_CVPR_2019_paper.pdf) | [Code](https://github.com/junsukchoe/ADL)
 CutMix | [ICCV'19](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yun_CutMix_Regularization_Strategy_to_Train_Strong_Classifiers_With_Localizable_Features_ICCV_2019_paper.pdf) | [Code](https://github.com/clovaai/CutMix-PyTorch)
 
-## 6. WSOL training and evaluataion
+## 6. WSOL training and evaluation
 
 We describe the data preparation and training scripts for the above six prior 
 WSOL methods.
@@ -549,7 +529,30 @@ python main.py --dataset_name OpenImages \
 
 See [config.py](config.py) for the full descriptions of the arguments, especially the method-specific hyperparameters.
 
-## 7. How to cite
+## 7. Code license
+
+This project is distributed under MIT license.
+
+```
+Copyright (c) 2020-present NAVER Corp.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+## 8. How to cite
 
 ```
 @article{wsoleval,
