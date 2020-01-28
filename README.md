@@ -197,7 +197,7 @@ of each image. You should verify the license for each image yourself.
 
 ## 3. Code dependencies
 
-Both the [evaluation-only](4-wsol-evaluation) and [eval+train](5-wsol-training-and-evaluation) scripts require only the following libraries: 
+Both the [evaluation-only](#4-wsol-evaluation) and [eval+train](#6-wsol-training-and-evaluation) scripts require only the following libraries: 
 * [OpenCV](https://opencv.org/)
 * [PyTorch](https://pytorch.org/)
 * [munch](https://github.com/Infinidat/munch)
@@ -348,7 +348,7 @@ the [wsol](wsol) folder. Please add your own WSOL method in the list by making
 a pull request.
 
 We provide the full training and evaluation scripts on the provided WSOL methods. 
-Details will be explained in the [next section](#5-wsol-training-and-evaluation).
+Details will be explained in the [next section](#6-wsol-training-and-evaluation).
 
 Method | Paper | Original code
 -- | -- | --
@@ -501,7 +501,7 @@ We support the following architecture and method combinations:
   - `inception_v3`
   - `resnet50`
   
-* Methods (see [Library of WSOL methods](#4-library-of-wsol-methods) and paper for descriptions).
+* Methods (see [Library of WSOL methods](#5-library-of-wsol-methods) and paper for descriptions).
   - `cam`
   - `has`
   - `acol`
