@@ -37,7 +37,7 @@ from util import t2n
 _IMAGENET_MEAN = [0.485, .456, .406]
 _IMAGENET_STDDEV = [.229, .224, .225]
 _RESIZE_LENGTH = 224
-
+_CONTOUR_INDEX = 1 if cv2.__version__.split('.')[0] == 3 else 0
 
 def calculate_multiple_iou(box_a, box_b):
     """
@@ -133,7 +133,7 @@ def compute_bboxes_from_scoremaps(scoremap, scoremap_threshold_list):
         contours = cv2.findContours(
             image=thr_gray_heatmap,
             mode=cv2.RETR_TREE,
-            method=cv2.CHAIN_APPROX_SIMPLE)[1]
+            method=cv2.CHAIN_APPROX_SIMPLE)[_CONTOUR_INDEX]
 
         if len(contours) == 0:
             return [0, 0, 0, 0]
