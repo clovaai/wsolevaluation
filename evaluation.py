@@ -37,7 +37,8 @@ from util import t2n
 _IMAGENET_MEAN = [0.485, .456, .406]
 _IMAGENET_STDDEV = [.229, .224, .225]
 _RESIZE_LENGTH = 224
-_CONTOUR_INDEX = 1 if cv2.__version__.split('.')[0] == 3 else 0
+_CONTOUR_INDEX = 1 if cv2.__version__.split('.')[0] == '3' else 0
+
 
 def calculate_multiple_iou(box_a, box_b):
     """

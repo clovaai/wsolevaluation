@@ -159,7 +159,7 @@ def get_configs():
     parser.add_argument('--pretrained', type=str2bool, nargs='?',
                         const=True, default=True,
                         help='Use pre_trained model.')
-    parser.add_argument('--cam_curve_interval', type=int, default=.001,
+    parser.add_argument('--cam_curve_interval', type=float, default=.001,
                         help='CAM curve interval')
     parser.add_argument('--resize_size', type=int, default=256,
                         help='input resize size')

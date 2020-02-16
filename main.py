@@ -21,6 +21,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import numpy as np
 import os
+import pickle
 import random
 import torch
 import torch.nn as nn
@@ -43,31 +44,25 @@ def set_random_seed(seed):
 
 
 class PerformanceMeter(object):
-    def __init__(self, higher_is_better=True):
-        self.higher_is_better = higher_is_better
-        self.best_value = -np.inf if self.higher_is_better else np.inf
-        self.best_epoch = 0
-        self.current_value = 0.
+    def __init__(self, split, higher_is_better=True):
+        self.best_function = max if higher_is_better else min
+        self.current_value = None
+        self.best_value = None
+        self.best_epoch = None
+        self.value_per_epoch = [] \
+            if split == 'val' else [-np.inf if higher_is_better else np.inf]
 
-    def _check_best(self, new_value):
-        if self.higher_is_better:
-            return new_value >= self.best_value
-        else:
-            return new_value <= self.best_value
-
-    def update(self, new_value, epoch):
-        self.current_value = new_value
-        if epoch < 0:
-            raise ValueError("Epoch must be non-negative.")
-        if self._check_best(new_value):
-            self.best_value = new_value
-            self.best_epoch = epoch
+    def update(self, new_value):
+        self.value_per_epoch.append(new_value)
+        self.current_value = self.value_per_epoch[-1]
+        self.best_value = self.best_function(self.value_per_epoch)
+        self.best_epoch = self.value_per_epoch.index(self.best_value)
 
 
 class Trainer(object):
     _CHECKPOINT_NAME_TEMPLATE = '{}_checkpoint.pth.tar'
     _SPLITS = ('train', 'val', 'test')
-    _EVAL_METRICS = ('classification', 'localization')
+    _EVAL_METRICS = ('loss', 'classification', 'localization')
     _BEST_CRITERION_METRIC = 'localization'
     _NUM_CLASSES_MAPPING = {
         "CUB": 200,
@@ -85,9 +80,11 @@ class Trainer(object):
         self.args = get_configs()
         set_random_seed(self.args.seed)
         print(self.args)
-        self.eval_performance_meters = {
+        self.performance_meters = {
             split: {
-                metric: PerformanceMeter()
+                metric: PerformanceMeter(split,
+                                         higher_is_better=False
+                                         if metric == 'loss' else True)
                 for metric in self._EVAL_METRICS
             }
             for split in self._SPLITS
@@ -196,9 +193,8 @@ class Trainer(object):
             images = images.cuda()
             target = target.cuda()
 
-            if batch_idx % 10 == 0:
-                print("  iteration {} / {}"
-                      .format(batch_idx + 1, len(loader)))
+            if batch_idx % int(len(loader) / 10) == 0:
+                print(" iteration ({} / {})".format(batch_idx + 1, len(loader)))
 
             logits, loss = self._wsol_training(images, target)
             pred = logits.argmax(dim=1)
@@ -214,21 +210,34 @@ class Trainer(object):
         loss_average = total_loss / float(num_images)
         classification_acc = num_correct / float(num_images) * 100
 
+        self.performance_meters[split]['classification'].update(
+            classification_acc)
+        self.performance_meters[split]['loss'].update(loss_average)
+
         return dict(classification_acc=classification_acc,
                     loss=loss_average)
 
-    def _print_performances(self):
+    def print_performances(self):
         print("Metrics: {}".format(', '.join(self._EVAL_METRICS)))
         for split in self._SPLITS:
             for metric in self._EVAL_METRICS:
-                print("Split {}, metric {}, best epoch: {}".format(
-                    split,
-                    metric,
-                    self.eval_performance_meters[split][metric].best_epoch))
-                print("Split {}, metric {}, best value: {}".format(
-                    split,
-                    metric,
-                    self.eval_performance_meters[split][metric].best_value))
+                current_performance = \
+                    self.performance_meters[split][metric].current_value
+                if current_performance is not None:
+                    print("Split {}, metric {}, current value: {}".format(
+                        split, metric, current_performance))
+                    if split != 'test':
+                        print("Split {}, metric {}, best value: {}".format(
+                            split, metric,
+                            self.performance_meters[split][metric].best_value))
+                        print("Split {}, metric {}, best epoch: {}".format(
+                            split, metric,
+                            self.performance_meters[split][metric].best_epoch))
+
+    def save_performances(self):
+        log_path = os.path.join(self.args.log_folder, 'performance_log.pickle')
+        with open(log_path, 'wb') as f:
+            pickle.dump(self.performance_meters, f)
 
     def _compute_accuracy(self, loader):
         num_correct = 0
@@ -251,8 +260,7 @@ class Trainer(object):
         self.model.eval()
 
         accuracy = self._compute_accuracy(loader=self.loaders[split])
-        self.eval_performance_meters[split]['classification'].update(
-            accuracy, epoch)
+        self.performance_meters[split]['classification'].update(accuracy)
 
         cam_computer = CAMComputer(
             model=self.model,
@@ -264,10 +272,8 @@ class Trainer(object):
             cam_curve_interval=self.args.cam_curve_interval)
         cam_performance = cam_computer.compute_and_evaluate_cams()
 
-        self.eval_performance_meters[split]['localization'].update(
-            cam_performance, epoch)
-
-        self._print_performances()
+        self.performance_meters[split]['localization'].update(
+            cam_performance)
 
     def _torch_save_model(self, filename, epoch):
         torch.save({'architecture': self.args.architecture,
@@ -277,7 +283,7 @@ class Trainer(object):
                    os.path.join(self.args.log_folder, filename))
 
     def save_checkpoint(self, epoch, split):
-        if (self.eval_performance_meters[split][self._BEST_CRITERION_METRIC]
+        if (self.performance_meters[split][self._BEST_CRITERION_METRIC]
                 .best_epoch) == epoch:
             self._torch_save_model(
                 self._CHECKPOINT_NAME_TEMPLATE.format('best'), epoch)
@@ -301,11 +307,11 @@ class Trainer(object):
             reporter_instance.add(
                 key='{split}/{metric}'
                     .format(split=split, metric=metric),
-                val=self.eval_performance_meters[split][metric].current_value)
+                val=self.performance_meters[split][metric].current_value)
             reporter_instance.add(
                 key='{split}/{metric}_best'
                     .format(split=split, metric=metric),
-                val=self.eval_performance_meters[split][metric].best_value)
+                val=self.performance_meters[split][metric].best_value)
         reporter_instance.write()
 
     def adjust_learning_rate(self, epoch):
@@ -330,31 +336,34 @@ class Trainer(object):
 def main():
     trainer = Trainer()
 
+    print("===========================================================")
+    print("Start epoch 0 ...")
+    trainer.evaluate(epoch=0, split='val')
+    trainer.print_performances()
+    trainer.report(epoch=0, split='val')
+    trainer.save_checkpoint(epoch=0, split='val')
+    print("Epoch 0 done.")
+
     for epoch in range(trainer.args.epochs):
         print("===========================================================")
-        print("Start epoch {} ...".format(epoch))
-        trainer.evaluate(epoch, split='val')
-        trainer.report(epoch, split='val')
-        trainer.save_checkpoint(epoch, split='val')
-
+        print("Start epoch {} ...".format(epoch + 1))
         trainer.adjust_learning_rate(epoch + 1)
         train_performance = trainer.train(split='train')
         trainer.report_train(train_performance, epoch + 1, split='train')
+        trainer.evaluate(epoch + 1, split='val')
+        trainer.print_performances()
+        trainer.report(epoch + 1, split='val')
+        trainer.save_checkpoint(epoch + 1, split='val')
         print("Epoch {} done.".format(epoch + 1))
-
-    print("===========================================================")
-    print("Final epoch evaluation on validation set ...")
-
-    trainer.evaluate(trainer.args.epochs, split='val')
-    trainer.report(trainer.args.epochs, split='val')
-    trainer.save_checkpoint(trainer.args.epochs, split='val')
 
     print("===========================================================")
     print("Final epoch evaluation on test set ...")
 
     trainer.load_checkpoint(checkpoint_type='best')
     trainer.evaluate(trainer.args.epochs, split='test')
+    trainer.print_performances()
     trainer.report(trainer.args.epochs, split='test')
+    trainer.save_performances()
 
 
 if __name__ == '__main__':
