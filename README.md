@@ -1,4 +1,4 @@
-## Evaluating Weakly Supervised Object Localization Methods Right
+## Evaluating Weakly Supervised Object Localization Methods Right (CVPR 2020)
 
 [Evaluating Weakly Supervised Object Localization Methods Right](https://arxiv.org/abs/2001.07437)
 
@@ -555,10 +555,13 @@ SOFTWARE.
 ## 8. How to cite
 
 ```
-@article{wsoleval,
+@inproceedings{choe2020cvpr,
   title={Evaluating Weakly Supervised Object Localization Methods Right},
   author={Choe, Junsuk and Oh, Seong Joon and Lee, Seungho and Chun, Sanghyuk and Akata, Zeynep and Shim, Hyunjung},
-  journal={arXiv preprint arXiv:2001.07437},
-  year={2020}
+  year = {2020},
+  booktitle = {Conference on Computer Vision and Pattern Recognition (CVPR)},
+  note = {to appear},
+  pubstate = {published},
+  tppubtype = {inproceedings}
 }
 ```
