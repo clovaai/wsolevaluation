@@ -165,6 +165,12 @@ def get_configs():
                         help='input resize size')
     parser.add_argument('--crop_size', type=int, default=224,
                         help='input crop size')
+    parser.add_argument('--multi_contour_eval', type=str2bool, nargs='?',
+                        const=True, default=False)
+    parser.add_argument('--multi_iou_eval', type=str2bool, nargs='?',
+                        const=True, default=False)
+    parser.add_argument('--iou_threshold_list', nargs='+',
+                        type=int, default=[30, 50, 70])
 
     # Common hyperparameters
     parser.add_argument('--batch_size', default=64, type=int,

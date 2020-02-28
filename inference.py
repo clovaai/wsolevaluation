@@ -51,13 +51,14 @@ def normalize_scoremap(cam):
 
 class CAMComputer(object):
     def __init__(self, model, loader, metadata_root, mask_root,
-                 dataset_name, split, cam_curve_interval=.001):
+                 iou_threshold_list, dataset_name, split,
+                 multi_contour_eval, cam_curve_interval=.001):
         self.model = model
         self.model.eval()
         self.loader = loader
 
         metadata = configure_metadata(metadata_root)
-        threshold_list = list(np.arange(0, 1, cam_curve_interval))
+        cam_threshold_list = list(np.arange(0, 1, cam_curve_interval))
 
         self.evaluator = {"OpenImages": MaskEvaluator,
                           "CUB": BoxEvaluator,
@@ -65,8 +66,10 @@ class CAMComputer(object):
                           }[dataset_name](metadata=metadata,
                                           dataset_name=dataset_name,
                                           split=split,
-                                          threshold_list=threshold_list,
-                                          mask_root=mask_root)
+                                          cam_threshold_list=cam_threshold_list,
+                                          iou_threshold_list=iou_threshold_list,
+                                          mask_root=mask_root,
+                                          multi_contour_eval=multi_contour_eval)
 
     def compute_and_evaluate_cams(self):
         print("Computing and evaluating cams.")

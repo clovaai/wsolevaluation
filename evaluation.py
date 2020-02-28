@@ -112,14 +112,18 @@ def resize_bbox(box, image_size, resize_size):
     return int(newbox_x0), int(newbox_y0), int(newbox_x1), int(newbox_y1)
 
 
-def compute_bboxes_from_scoremaps(scoremap, scoremap_threshold_list):
+def compute_bboxes_from_scoremaps(scoremap, scoremap_threshold_list,
+                                  multi_contour_eval=False):
     """
     Args:
         scoremap: numpy.ndarray(dtype=np.float32, size=(H, W)) between 0 and 1
         scoremap_threshold_list: iterable
+        multi_contour_eval: flag for multi-contour evaluation
 
     Returns:
-         boxes: list of estimated boxes (list of ints) at each cam threshold
+        estimated_boxes_at_each_thr: list of estimated boxes (list of np.array)
+            at each cam threshold
+        number_of_box_list: list of the number of boxes at each cam threshold
     """
     check_scoremap_validity(scoremap)
     height, width = scoremap.shape
@@ -137,19 +141,29 @@ def compute_bboxes_from_scoremaps(scoremap, scoremap_threshold_list):
             method=cv2.CHAIN_APPROX_SIMPLE)[_CONTOUR_INDEX]
 
         if len(contours) == 0:
-            return [0, 0, 0, 0]
+            return np.asarray([[0, 0, 0, 0]]), 1
 
-        c = max(contours, key=cv2.contourArea)
-        x, y, w, h = cv2.boundingRect(c)
-        x0, y0, x1, y1 = x, y, x + w, y + h
-        x1 = min(x1, width - 1)
-        y1 = min(y1, height - 1)
-        return [x0, y0, x1, y1]
+        if not multi_contour_eval:
+            contours = [max(contours, key=cv2.contourArea)]
 
-    estimated_bbox = [scoremap2bbox(threshold)
-                      for threshold in scoremap_threshold_list]
+        estimated_boxes = []
+        for contour in contours:
+            x, y, w, h = cv2.boundingRect(contour)
+            x0, y0, x1, y1 = x, y, x + w, y + h
+            x1 = min(x1, width - 1)
+            y1 = min(y1, height - 1)
+            estimated_boxes.append([x0, y0, x1, y1])
 
-    return estimated_bbox
+        return np.asarray(estimated_boxes), len(contours)
+
+    estimated_boxes_at_each_thr = []
+    number_of_box_list = []
+    for threshold in scoremap_threshold_list:
+        boxes, number_of_box = scoremap2bbox(threshold)
+        estimated_boxes_at_each_thr.append(boxes)
+        number_of_box_list.append(number_of_box)
+
+    return estimated_boxes_at_each_thr, number_of_box_list
 
 
 class CamDataset(torchdata.Dataset):
@@ -181,13 +195,15 @@ class LocalizationEvaluator(object):
     localization performance.
     """
 
-    def __init__(self, metadata, dataset_name, split, threshold_list,
-                 mask_root):
+    def __init__(self, metadata, dataset_name, split, cam_threshold_list,
+                 iou_threshold_list, mask_root, multi_contour_eval):
         self.metadata = metadata
-        self.threshold_list = threshold_list
+        self.cam_threshold_list = cam_threshold_list
+        self.iou_threshold_list = iou_threshold_list
         self.dataset_name = dataset_name
         self.split = split
         self.mask_root = mask_root
+        self.multi_contour_eval = multi_contour_eval
 
     def accumulate(self, scoremap, image_id):
         raise NotImplementedError
@@ -197,15 +213,15 @@ class LocalizationEvaluator(object):
 
 
 class BoxEvaluator(LocalizationEvaluator):
-    _IOU_THRESHOLD = 0.5
-
     def __init__(self, **kwargs):
         super(BoxEvaluator, self).__init__(**kwargs)
 
         self.image_ids = get_image_ids(metadata=self.metadata)
         self.resize_length = _RESIZE_LENGTH
         self.cnt = 0
-        self.num_correct = np.zeros(len(self.threshold_list))
+        self.num_correct = \
+            {iou_threshold: np.zeros(len(self.cam_threshold_list))
+             for iou_threshold in self.iou_threshold_list}
         self.original_bboxes = get_bounding_boxes(self.metadata)
         self.image_sizes = get_image_sizes(self.metadata)
         self.gt_bboxes = self._load_resized_boxes(self.original_bboxes)
@@ -229,17 +245,28 @@ class BoxEvaluator(LocalizationEvaluator):
             scoremap: numpy.ndarray(size=(H, W), dtype=np.float)
             image_id: string.
         """
-        boxes_at_thresholds = compute_bboxes_from_scoremaps(
+        boxes_at_thresholds, number_of_box_list = compute_bboxes_from_scoremaps(
             scoremap=scoremap,
-            scoremap_threshold_list=self.threshold_list)
+            scoremap_threshold_list=self.cam_threshold_list,
+            multi_contour_eval=self.multi_contour_eval)
+
+        boxes_at_thresholds = np.concatenate(boxes_at_thresholds, axis=0)
 
         multiple_iou = calculate_multiple_iou(
             np.array(boxes_at_thresholds),
             np.array(self.gt_bboxes[image_id]))
 
-        correct_threshold_indices = np.where(multiple_iou.max(1)
-                                             >= self._IOU_THRESHOLD)[0]
-        self.num_correct[correct_threshold_indices] += 1
+        idx = 0
+        sliced_multiple_iou = []
+        for nr_box in number_of_box_list:
+            sliced_multiple_iou.append(
+                max(multiple_iou.max(1)[idx:idx + nr_box]))
+            idx += nr_box
+
+        for _THRESHOLD in self.iou_threshold_list:
+            correct_threshold_indices = \
+                np.where(np.asarray(sliced_multiple_iou) >= (_THRESHOLD/100))[0]
+            self.num_correct[_THRESHOLD][correct_threshold_indices] += 1
         self.cnt += 1
 
     def compute(self):
@@ -249,11 +276,14 @@ class BoxEvaluator(LocalizationEvaluator):
                box prediction is correct. The best scoremap threshold is taken
                for the final performance.
         """
-        localization_accuracies = self.num_correct * 100. / float(self.cnt)
-        max_localization_accuracy = localization_accuracies.max()
-        print("MaxBoxAcc on split {}: {}"
-              .format(self.split, max_localization_accuracy))
-        return max_localization_accuracy
+        max_box_acc = []
+
+        for _THRESHOLD in self.iou_threshold_list:
+            localization_accuracies = self.num_correct[_THRESHOLD] * 100. / \
+                                      float(self.cnt)
+            max_box_acc.append(localization_accuracies.max())
+
+        return max_box_acc
 
 
 def load_mask_image(file_path, resize_size):
@@ -313,10 +343,10 @@ class MaskEvaluator(LocalizationEvaluator):
 
         self.mask_paths, self.ignore_paths = get_mask_paths(self.metadata)
 
-        # threshold_list is given as [0, bw, 2bw, ..., 1-bw]
+        # cam_threshold_list is given as [0, bw, 2bw, ..., 1-bw]
         # Set bins as [0, bw), [bw, 2bw), ..., [1-bw, 1), [1, 2), [2, 3)
-        self.num_bins = len(self.threshold_list) + 2
-        self.threshold_list_right_edge = np.append(self.threshold_list,
+        self.num_bins = len(self.cam_threshold_list) + 2
+        self.threshold_list_right_edge = np.append(self.cam_threshold_list,
                                                    [1.0, 2.0, 3.0])
         self.gt_true_score_hist = np.zeros(self.num_bins, dtype=np.float)
         self.gt_false_score_hist = np.zeros(self.num_bins, dtype=np.float)
@@ -426,7 +456,7 @@ def evaluate_wsol(scoremap_root, metadata_root, mask_root, dataset_name, split,
     print("Loading and evaluating cams.")
     metadata = configure_metadata(metadata_root)
     image_ids = get_image_ids(metadata)
-    threshold_list = list(np.arange(0, 1, cam_curve_interval))
+    cam_threshold_list = list(np.arange(0, 1, cam_curve_interval))
 
     evaluator = {"OpenImages": MaskEvaluator,
                  "CUB": BoxEvaluator,
@@ -434,7 +464,7 @@ def evaluate_wsol(scoremap_root, metadata_root, mask_root, dataset_name, split,
                  }[dataset_name](metadata=metadata,
                                  dataset_name=dataset_name,
                                  split=split,
-                                 threshold_list=threshold_list,
+                                 cam_threshold_list=cam_threshold_list,
                                  mask_root=mask_root)
 
     cam_loader = _get_cam_loader(image_ids, scoremap_root)

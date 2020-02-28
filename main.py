@@ -62,7 +62,7 @@ class PerformanceMeter(object):
 class Trainer(object):
     _CHECKPOINT_NAME_TEMPLATE = '{}_checkpoint.pth.tar'
     _SPLITS = ('train', 'val', 'test')
-    _EVAL_METRICS = ('loss', 'classification', 'localization')
+    _EVAL_METRICS = ['loss', 'classification', 'localization']
     _BEST_CRITERION_METRIC = 'localization'
     _NUM_CLASSES_MAPPING = {
         "CUB": 200,
@@ -80,15 +80,7 @@ class Trainer(object):
         self.args = get_configs()
         set_random_seed(self.args.seed)
         print(self.args)
-        self.performance_meters = {
-            split: {
-                metric: PerformanceMeter(split,
-                                         higher_is_better=False
-                                         if metric == 'loss' else True)
-                for metric in self._EVAL_METRICS
-            }
-            for split in self._SPLITS
-        }
+        self.performance_meters = self._set_performance_meters()
         self.reporter = self.args.reporter
         self.model = self._set_model()
         self.cross_entropy_loss = nn.CrossEntropyLoss().cuda()
@@ -102,6 +94,21 @@ class Trainer(object):
             crop_size=self.args.crop_size,
             proxy_training_set=self.args.proxy_training_set,
             num_val_sample_per_class=self.args.num_val_sample_per_class)
+
+    def _set_performance_meters(self):
+        self._EVAL_METRICS += ['localization_IOU_{}'.format(threshold)
+                               for threshold in self.args.iou_threshold_list]
+
+        eval_dict = {
+            split: {
+                metric: PerformanceMeter(split,
+                                         higher_is_better=False
+                                         if metric == 'loss' else True)
+                for metric in self._EVAL_METRICS
+            }
+            for split in self._SPLITS
+        }
+        return eval_dict
 
     def _set_model(self):
         num_classes = self._NUM_CLASSES_MAPPING[self.args.dataset_name]
@@ -218,7 +225,6 @@ class Trainer(object):
                     loss=loss_average)
 
     def print_performances(self):
-        print("Metrics: {}".format(', '.join(self._EVAL_METRICS)))
         for split in self._SPLITS:
             for metric in self._EVAL_METRICS:
                 current_performance = \
@@ -267,13 +273,26 @@ class Trainer(object):
             loader=self.loaders[split],
             metadata_root=os.path.join(self.args.metadata_root, split),
             mask_root=self.args.mask_root,
+            iou_threshold_list=self.args.iou_threshold_list,
             dataset_name=self.args.dataset_name,
             split=split,
-            cam_curve_interval=self.args.cam_curve_interval)
+            cam_curve_interval=self.args.cam_curve_interval,
+            multi_contour_eval=self.args.multi_contour_eval,
+        )
         cam_performance = cam_computer.compute_and_evaluate_cams()
 
-        self.performance_meters[split]['localization'].update(
-            cam_performance)
+        if self.args.multi_iou_eval or self.args.dataset_name == 'OpenImages':
+            loc_score = np.average(cam_performance)
+        else:
+            loc_score = cam_performance[self.args.iou_threshold_list.index(50)]
+
+        self.performance_meters[split]['localization'].update(loc_score)
+
+        if self.args.dataset_name in ('CUB', 'ILSVRC'):
+            for idx, IOU_THRESHOLD in enumerate(self.args.iou_threshold_list):
+                self.performance_meters[split][
+                    'localization_IOU_{}'.format(IOU_THRESHOLD)].update(
+                    cam_performance[idx])
 
     def _torch_save_model(self, filename, epoch):
         torch.save({'architecture': self.args.architecture,
