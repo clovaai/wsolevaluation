@@ -378,7 +378,7 @@ def main():
     print("===========================================================")
     print("Final epoch evaluation on test set ...")
 
-    trainer.load_checkpoint(checkpoint_type='best')
+    trainer.load_checkpoint(checkpoint_type=trainer.args.eval_checkpoint_type)
     trainer.evaluate(trainer.args.epochs, split='test')
     trainer.print_performances()
     trainer.report(trainer.args.epochs, split='test')

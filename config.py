@@ -171,6 +171,8 @@ def get_configs():
                         const=True, default=False)
     parser.add_argument('--iou_threshold_list', nargs='+',
                         type=int, default=[30, 50, 70])
+    parser.add_argument('--eval_checkpoint_type', type=str, default='best',
+                        choices=('best', 'last'))
 
     # Common hyperparameters
     parser.add_argument('--batch_size', default=64, type=int,
