@@ -524,10 +524,33 @@ python main.py --dataset_name OpenImages \
                --lr_decay_frequency 3 \
                --weight_decay 5.00E-04 \
                --override_cache FALSE \
-               --workers 4
+               --workers 4 \
+               --multi_iou_eval False \
+               --iou_threshold_list 30 50 70 \
+               --multi_contour_eval False \
+               --eval_checkpoint_type best
 ```
 
-See [config.py](config.py) for the full descriptions of the arguments, especially the method-specific hyperparameters.
+We support box evaluation using multiple IoU thresholds (default: 30%, 50%, 70%). 
+If you set `multi_iou_eval` to `True`, the `localization` metric in the log shows
+a mean of `MaxBoxAcc` across all IoU thresholds. Otherwise, it only shows 
+`MaxBoxAcc` at 50% IoU threshold. The IoU threshold list can be easily set by 
+changing `iou_threshold_list` argument. 
+
+We also support a new advanced bounding box mining method. It extracts bounding boxes 
+from all contours in the thresholded score map. You can use this feature by setting 
+`multi_contour_eval` to `True`. Otherwise, bounding boxes are extracted from the 
+largest connected component of the score map, as we mentioned in the paper. 
+
+During training, we evaluate the model on `train-fullsup` split at every epoch and 
+save a checkpoint (`best_checkpoint.pth.tar`) if the localization performance 
+surpasses every previous score. We also save last checkpoint 
+(`last_checkpoint.pth.tar`) when the training is finished. You can select 
+checkpoint type for evaluation on `test` split by setting `eval_checkpoint_type` 
+argument accordingly.
+
+See [config.py](config.py) for the full descriptions of the arguments, 
+especially the method-specific hyperparameters.
 
 ## 7. Code license
 
