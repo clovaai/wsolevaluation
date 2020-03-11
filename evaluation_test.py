@@ -144,11 +144,14 @@ def set_metadata(dataset_name, split):
 def load_evaluator(Evaluator, dataset_name, split, cam_curve_interval,
                    mask_root=None):
     metadata = set_metadata(dataset_name, split)
-    threshold_list = list(np.arange(0, 1, cam_curve_interval))
+    cam_threshold_list = list(np.arange(0, 1, cam_curve_interval))
+    iou_threshold_list = [30, 50, 70]
     evaluator = Evaluator(metadata=metadata,
                           dataset_name=dataset_name,
                           split=split,
-                          threshold_list=threshold_list,
+                          cam_threshold_list=cam_threshold_list,
+                          iou_threshold_list=iou_threshold_list,
+                          multi_contour_eval=False,
                           mask_root=mask_root)
     return evaluator
 

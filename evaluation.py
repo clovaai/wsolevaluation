@@ -25,6 +25,7 @@ import numpy as np
 import os
 import torch.utils.data as torchdata
 
+from config import str2bool
 from data_loaders import configure_metadata
 from data_loaders import get_image_ids
 from data_loaders import get_bounding_boxes
@@ -424,6 +425,7 @@ def _get_cam_loader(image_ids, scoremap_path):
 
 
 def evaluate_wsol(scoremap_root, metadata_root, mask_root, dataset_name, split,
+                  multi_contour_eval, multi_iou_eval, iou_threshold_list,
                   cam_curve_interval=.001):
     """
     Compute WSOL performances of predicted heatmaps against ground truth
@@ -446,6 +448,11 @@ def evaluate_wsol(scoremap_root, metadata_root, mask_root, dataset_name, split,
         mask_root: string.
         dataset_name: string. Supports [CUB, ILSVRC, and OpenImages].
         split: string. Supports [train, val, test].
+        multi_contour_eval:  considering the best match between the set of all
+            estimated boxes and the set of all ground truth boxes.
+        multi_iou_eval: averaging the performance across various level of iou
+            thresholds.
+        iou_threshold_list: list. default: [30, 50, 70]
         cam_curve_interval: float. Default 0.001. At which threshold intervals
             will the heatmaps be evaluated?
     Returns:
@@ -465,13 +472,19 @@ def evaluate_wsol(scoremap_root, metadata_root, mask_root, dataset_name, split,
                                  dataset_name=dataset_name,
                                  split=split,
                                  cam_threshold_list=cam_threshold_list,
-                                 mask_root=mask_root)
+                                 mask_root=mask_root,
+                                 multi_contour_eval=multi_contour_eval,
+                                 iou_threshold_list=iou_threshold_list)
 
     cam_loader = _get_cam_loader(image_ids, scoremap_root)
     for cams, image_ids in cam_loader:
         for cam, image_id in zip(cams, image_ids):
             evaluator.accumulate(t2n(cam), image_id)
     performance = evaluator.compute()
+    if multi_iou_eval or dataset_name == 'OpenImages':
+        performance = np.average(performance)
+    else:
+        performance = performance[iou_threshold_list.index(50)]
     return performance
 
 
@@ -492,6 +505,12 @@ def main():
     parser.add_argument('--cam_curve_interval', type=float, default=0.01,
                         help="At which threshold intervals will the score maps "
                              "be evaluated?.")
+    parser.add_argument('--multi_contour_eval', type=str2bool, nargs='?',
+                        const=True, default=False)
+    parser.add_argument('--multi_iou_eval', type=str2bool, nargs='?',
+                        const=True, default=False)
+    parser.add_argument('--iou_threshold_list', nargs='+',
+                        type=int, default=[30, 50, 70])
 
     args = parser.parse_args()
     evaluate_wsol(scoremap_root=args.scoremap_root,
@@ -499,7 +518,10 @@ def main():
                   mask_root=args.mask_root,
                   dataset_name=args.dataset_name,
                   split=args.split,
-                  cam_curve_interval=args.cam_curve_interval)
+                  cam_curve_interval=args.cam_curve_interval,
+                  multi_contour_eval=args.multi_contour_eval,
+                  multi_iou_eval=args.multi_iou_eval,
+                  iou_threshold_list=args.iou_threshold_list,)
 
 
 if __name__ == "__main__":
