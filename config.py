@@ -25,6 +25,7 @@ import importlib
 import os
 from os.path import join as ospj
 import shutil
+import warnings
 
 from util import Logger
 
@@ -36,6 +37,16 @@ _SPLITS = ('train', 'val', 'test')
 
 def mch(**kwargs):
     return munch.Munch(dict(**kwargs))
+
+
+def box_v2_metric(args):
+    if args.box_v2_metric:
+        args.multi_contour_eval = True
+        args.multi_iou_eval = True
+    else:
+        args.multi_contour_eval = False
+        args.multi_iou_eval = False
+        warnings.warn("MaxBoxAcc metric is deprecated. Use MaxBoxAccV2.")
 
 
 def str2bool(v):
@@ -53,9 +64,6 @@ def get_architecture_type(wsol_method):
     else:
         architecture_type = wsol_method
     return architecture_type
-
-
-
 
 
 def configure_data_paths(args):
@@ -166,13 +174,15 @@ def get_configs():
     parser.add_argument('--crop_size', type=int, default=224,
                         help='input crop size')
     parser.add_argument('--multi_contour_eval', type=str2bool, nargs='?',
-                        const=True, default=False)
+                        const=True, default=True)
     parser.add_argument('--multi_iou_eval', type=str2bool, nargs='?',
-                        const=True, default=False)
+                        const=True, default=True)
     parser.add_argument('--iou_threshold_list', nargs='+',
                         type=int, default=[30, 50, 70])
-    parser.add_argument('--eval_checkpoint_type', type=str, default='best',
+    parser.add_argument('--eval_checkpoint_type', type=str, default='last',
                         choices=('best', 'last'))
+    parser.add_argument('--box_v2_metric', type=str2bool, nargs='?',
+                        const=True, default=True)
 
     # Common hyperparameters
     parser.add_argument('--batch_size', default=64, type=int,
@@ -226,6 +236,7 @@ def get_configs():
     check_dependency(args)
     args.log_folder = configure_log_folder(args)
     configure_log(args)
+    box_v2_metric(args)
 
     args.architecture_type = get_architecture_type(args.wsol_method)
     args.data_paths = configure_data_paths(args)

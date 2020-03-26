@@ -38,6 +38,12 @@ for each method, CAM is still the best. In fact, our few-shot learning baseline,
 i.e., using the validation supervision (10 samples/class) at training time, 
 outperforms existing WSOL methods.
 
+## Updates
+
+__27 Mar, 2020__: New evaluation results are updated.
+__28 Feb, 2020__: New box evaluation (`MaxBoxAccV2`) is available.
+__22 Jan, 2020__: Initial upload.
+
 
 ## Table of contents 
 
@@ -359,6 +365,18 @@ Self-Produced Guidance (SPG) | [ECCV'18](http://openaccess.thecvf.com/content_EC
 Attention-based Dropout Layer (ADL) | [CVPR'19](http://openaccess.thecvf.com/content_CVPR_2019/papers/Choe_Attention-Based_Dropout_Layer_for_Weakly_Supervised_Object_Localization_CVPR_2019_paper.pdf) | [Code](https://github.com/junsukchoe/ADL)
 CutMix | [ICCV'19](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yun_CutMix_Regularization_Strategy_to_Train_Strong_Classifiers_With_Localizable_Features_ICCV_2019_paper.pdf) | [Code](https://github.com/clovaai/CutMix-PyTorch)
 
+<img src="main_table.png" width="100%" height="100%"></img>
+
+__Re-evaluating WSOL.__ How much have WSOL methods improved upon the vanilla CAM 
+model? `test` split results are shown, relative to the vanilla CAM performance. 
+Hyperparameters have been optimized over the identical `train-fullsup` split for 
+all WSOL methods and the FSL baseline: (10,5,5) full supervision/class for 
+(ImageNet,CUB,OpenImages). Note that we evaluate the last checkpoint of each 
+training session. More detailed results and corresponding hyperparameter sets 
+are available at 
+[here](https://docs.google.com/spreadsheets/d/1O4gu69FOOooPoTTtAEmFdfjs2K0EtFneYWQFk8rNqzw/edit?usp=sharing).
+
+
 ## 6. WSOL training and evaluation
 
 We describe the data preparation and training scripts for the above six prior 
@@ -525,32 +543,35 @@ python main.py --dataset_name OpenImages \
                --weight_decay 5.00E-04 \
                --override_cache FALSE \
                --workers 4 \
-               --multi_iou_eval False \
+               --box_v2_metric True \
                --iou_threshold_list 30 50 70 \
-               --multi_contour_eval False \
-               --eval_checkpoint_type best
+               --eval_checkpoint_type last
 ```
 
-We support box evaluation using multiple IoU thresholds (default: 30%, 50%, 70%). 
-If you set `multi_iou_eval` to `True`, the `localization` metric in the log shows
-a mean of `MaxBoxAcc` across all IoU thresholds. Otherwise, it only shows 
-`MaxBoxAcc` at 50% IoU threshold. The IoU threshold list can be easily set by 
-changing `iou_threshold_list` argument. 
-
-We also support a new advanced bounding box mining method. It extracts bounding boxes 
-from all contours in the thresholded score map. You can use this feature by setting 
-`multi_contour_eval` to `True`. Otherwise, bounding boxes are extracted from the 
-largest connected component of the score map, as we mentioned in the paper. 
+See [config.py](config.py) for the full descriptions of the arguments, especially 
+the method-specific hyperparameters.
 
 During training, we evaluate the model on `train-fullsup` split at every epoch and 
 save a checkpoint (`best_checkpoint.pth.tar`) if the localization performance 
 surpasses every previous score. We also save last checkpoint 
 (`last_checkpoint.pth.tar`) when the training is finished. You can select 
 checkpoint type for evaluation on `test` split by setting `eval_checkpoint_type` 
-argument accordingly.
+argument accordingly. We suggest to use the last checkpoint for evaluation.
 
-See [config.py](config.py) for the full descriptions of the arguments, 
-especially the method-specific hyperparameters.
+We introduce a new box evaluation metric, `MaxBoxAccV2`. This new feature can be 
+used by setting `box_v2_metric` to `True`. There are two changes:
+
++ Box evaluation using multiple IoU thresholds (default: 30%, 50%, 70%). 
+If you set `multi_iou_eval` to `True` (default), the `localization` metric in the 
+log shows a mean of `MaxBoxAcc` across all IoU thresholds. Otherwise, it only shows 
+`MaxBoxAcc` at 50% IoU threshold. The IoU threshold list can be easily set by 
+changing `iou_threshold_list` argument. 
+
++ A new advanced bounding box mining scheme. Bounding boxes are extracted from 
+all contours in the thresholded score map. You can use this feature by setting 
+`multi_contour_eval` to `True` (default). Otherwise, bounding boxes are extracted 
+from the largest connected component of the score map.
+
 
 ## 7. Code license
 
