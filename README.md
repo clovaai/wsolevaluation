@@ -40,9 +40,9 @@ outperforms existing WSOL methods.
 
 ## Updates
 
-__27 Mar, 2020__: New evaluation results are updated.
-__28 Feb, 2020__: New box evaluation (`MaxBoxAccV2`) is available.
-__22 Jan, 2020__: Initial upload.
+- __27 Mar, 2020__: New evaluation results are updated.
+- __28 Feb, 2020__: New box evaluation (`MaxBoxAccV2`) is available.
+- __22 Jan, 2020__: Initial upload.
 
 
 ## Table of contents 
