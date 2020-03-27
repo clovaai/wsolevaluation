@@ -46,7 +46,8 @@ def box_v2_metric(args):
     else:
         args.multi_contour_eval = False
         args.multi_iou_eval = False
-        warnings.warn("MaxBoxAcc metric is deprecated. Use MaxBoxAccV2.")
+        warnings.warn("MaxBoxAcc metric is deprecated.")
+        warnings.warn("Use MaxBoxAccV2 by setting args.box_v2_metric to True.")
 
 
 def str2bool(v):
