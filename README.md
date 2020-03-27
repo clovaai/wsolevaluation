@@ -40,8 +40,8 @@ outperforms existing WSOL methods.
 
 ## Updates
 
-- __27 Mar, 2020__: New evaluation results are updated.
-- __28 Feb, 2020__: New box evaluation (`MaxBoxAccV2`) is available.
+- __27 Mar, 2020__: [New evaluation results]((#5-library-of-wsol-methods)) are updated.
+- __28 Feb, 2020__: [New box evaluation](#improved-box-evaluation) (`MaxBoxAccV2`) is available.
 - __22 Jan, 2020__: Initial upload.
 
 
@@ -68,6 +68,7 @@ outperforms existing WSOL methods.
         - [CUB](#cub)
         - [OpenImages](#openimages)
     + [Run train+eval](#run-traineval)
+    + [Improved box evaluation](#improved-box-evaluation)
 * [7. Code license](#7-code-license)
 * [8. How to cite](#8-how-to-cite)
 
@@ -367,8 +368,10 @@ CutMix | [ICCV'19](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yun_Cut
 
 <img src="main_table.png" width="100%" height="100%"></img>
 
-__Re-evaluating WSOL.__ How much have WSOL methods improved upon the vanilla CAM 
-model? `test` split results are shown, relative to the vanilla CAM performance. 
+__Evaluation of WSOL methods.__ How much have WSOL methods improved upon the vanilla CAM 
+model? `MaxBoxAccV2` and `PxAP` performances over the `test` split are shown, relative to the vanilla CAM performance. 
+We recommend the `MaxBoxAccV2` over the original box metric `MaxBoxAcc` used in the CVPR version.
+For details, see the [latest arXiv version](https://arxiv.org/abs/2001.07437).
 Hyperparameters have been optimized over the identical `train-fullsup` split for 
 all WSOL methods and the FSL baseline: (10,5,5) full supervision/class for 
 (ImageNet,CUB,OpenImages). Note that we evaluate the last checkpoint of each 
@@ -558,8 +561,10 @@ surpasses every previous score. We also save last checkpoint
 checkpoint type for evaluation on `test` split by setting `eval_checkpoint_type` 
 argument accordingly. We suggest to use the last checkpoint for evaluation.
 
-We introduce a new box evaluation metric, `MaxBoxAccV2`. This new feature can be 
-used by setting `box_v2_metric` to `True`. There are two changes:
+### Improved box evaluation
+
+We introduce an improved box evaluation metric, `MaxBoxAccV2`, over the original metric used in the CVPR version: `MaxBoxAcc`. 
+Key improvements are as follows:
 
 + Box evaluation using multiple IoU thresholds (default: 30%, 50%, 70%). 
 If you set `multi_iou_eval` to `True` (default), the `localization` metric in the 
@@ -572,6 +577,8 @@ all contours in the thresholded score map. You can use this feature by setting
 `multi_contour_eval` to `True` (default). Otherwise, bounding boxes are extracted 
 from the largest connected component of the score map.
 
+**We recommend for future researchers to use the `MaxBoxAccV2` metric for box-based evaluation.**
+Users can evaluate the WSOL methods with this metric by setting `box_v2_metric` to `True`.
 
 ## 7. Code license
 
