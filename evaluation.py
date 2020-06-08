@@ -23,6 +23,7 @@ import argparse
 import cv2
 import numpy as np
 import os
+from os.path import join as ospj
 import torch.utils.data as torchdata
 
 from config import str2bool
@@ -461,7 +462,8 @@ def evaluate_wsol(scoremap_root, metadata_root, mask_root, dataset_name, split,
             is returned.
     """
     print("Loading and evaluating cams.")
-    metadata = configure_metadata(metadata_root)
+    meta_path = os.path.join(metadata_root, dataset_name, split)
+    metadata = configure_metadata(meta_path)
     image_ids = get_image_ids(metadata)
     cam_threshold_list = list(np.arange(0, 1, cam_curve_interval))
 
@@ -472,7 +474,7 @@ def evaluate_wsol(scoremap_root, metadata_root, mask_root, dataset_name, split,
                                  dataset_name=dataset_name,
                                  split=split,
                                  cam_threshold_list=cam_threshold_list,
-                                 mask_root=mask_root,
+                                 mask_root=ospj(mask_root, 'OpenImages'),
                                  multi_contour_eval=multi_contour_eval,
                                  iou_threshold_list=iou_threshold_list)
 
@@ -485,6 +487,8 @@ def evaluate_wsol(scoremap_root, metadata_root, mask_root, dataset_name, split,
         performance = np.average(performance)
     else:
         performance = performance[iou_threshold_list.index(50)]
+
+    print('localization: {}'.format(performance))
     return performance
 
 

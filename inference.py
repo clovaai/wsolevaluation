@@ -21,6 +21,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import cv2
 import numpy as np
+import os
+from os.path import join as ospj
+from os.path import dirname as ospd
 
 from evaluation import BoxEvaluator
 from evaluation import MaskEvaluator
@@ -52,10 +55,12 @@ def normalize_scoremap(cam):
 class CAMComputer(object):
     def __init__(self, model, loader, metadata_root, mask_root,
                  iou_threshold_list, dataset_name, split,
-                 multi_contour_eval, cam_curve_interval=.001):
+                 multi_contour_eval, cam_curve_interval=.001, log_folder=None):
         self.model = model
         self.model.eval()
         self.loader = loader
+        self.split = split
+        self.log_folder = log_folder
 
         metadata = configure_metadata(metadata_root)
         cam_threshold_list = list(np.arange(0, 1, cam_curve_interval))
@@ -73,7 +78,6 @@ class CAMComputer(object):
 
     def compute_and_evaluate_cams(self):
         print("Computing and evaluating cams.")
-
         for images, targets, image_ids in self.loader:
             image_size = images.shape[2:]
             images = images.cuda()
@@ -82,5 +86,10 @@ class CAMComputer(object):
                 cam_resized = cv2.resize(cam, image_size,
                                          interpolation=cv2.INTER_CUBIC)
                 cam_normalized = normalize_scoremap(cam_resized)
+                if self.split == 'val' or 'test':
+                    cam_path = ospj(self.log_folder, 'scoremaps', image_id)
+                    if not os.path.exists(ospd(cam_path)):
+                        os.makedirs(ospd(cam_path))
+                    np.save(ospj(cam_path), cam_normalized)
                 self.evaluator.accumulate(cam_normalized, image_id)
         return self.evaluator.compute()
