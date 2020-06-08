@@ -278,6 +278,7 @@ class Trainer(object):
             split=split,
             cam_curve_interval=self.args.cam_curve_interval,
             multi_contour_eval=self.args.multi_contour_eval,
+            log_folder=self.args.log_folder,
         )
         cam_performance = cam_computer.compute_and_evaluate_cams()
 
