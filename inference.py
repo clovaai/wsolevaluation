@@ -86,7 +86,7 @@ class CAMComputer(object):
                 cam_resized = cv2.resize(cam, image_size,
                                          interpolation=cv2.INTER_CUBIC)
                 cam_normalized = normalize_scoremap(cam_resized)
-                if self.split == 'val' or 'test':
+                if self.split in ('val', 'test'):
                     cam_path = ospj(self.log_folder, 'scoremaps', image_id)
                     if not os.path.exists(ospd(cam_path)):
                         os.makedirs(ospd(cam_path))
