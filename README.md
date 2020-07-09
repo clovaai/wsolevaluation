@@ -616,3 +616,11 @@ SOFTWARE.
   tppubtype = {inproceedings}
 }
 ```
+```
+@article{wsol_eval_journal,
+  title={Evaluation for Weakly Supervised Object Localization: Protocol, Metrics, and Datasets},
+  author={Choe, Junsuk and Oh, Seong Joon and Chun, Sanghyuk and Akata, Zeynep and Shim, Hyunjung},
+  journal={arXiv preprint arXiv:2007.04178},
+  year={2020}
+}
+```
