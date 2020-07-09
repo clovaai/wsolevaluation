@@ -1,6 +1,6 @@
 ## Evaluating Weakly Supervised Object Localization Methods Right (CVPR 2020)
 
-[Evaluating Weakly Supervised Object Localization Methods Right](https://arxiv.org/abs/2001.07437)
+[CVPR 2020 paper](https://arxiv.org/abs/2001.07437) | [Journal submission](https://arxiv.org/abs/2007.04178)
 
 Junsuk Choe<sup>1,3*</sup>, Seong Joon Oh<sup>2*</sup>, Seungho Lee<sup>1</sup>, 
 Sanghyuk Chun<sup>3</sup>, Zeynep Akata<sup>4</sup>, Hyunjung Shim<sup>1</sup>  
@@ -40,6 +40,7 @@ outperforms existing WSOL methods.
 
 ## Updates
 
+- __9 Jul, 2020__: [Journal submission](https://arxiv.org/abs/2007.04178) available.
 - __27 Mar, 2020__: [New WSOL evaluations](#5-library-of-wsol-methods) with `MaxBoxAccV2` are added.
 - __28 Feb, 2020__: [New box evaluation](#improved-box-evaluation) (`MaxBoxAccV2`) is available.
 - __22 Jan, 2020__: Initial upload.
@@ -617,7 +618,7 @@ SOFTWARE.
 }
 ```
 ```
-@article{wsol_eval_journal,
+@article{wsol_eval_journal_submission,
   title={Evaluation for Weakly Supervised Object Localization: Protocol, Metrics, and Datasets},
   author={Choe, Junsuk and Oh, Seong Joon and Chun, Sanghyuk and Akata, Zeynep and Shim, Hyunjung},
   journal={arXiv preprint arXiv:2007.04178},
