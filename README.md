@@ -618,10 +618,20 @@ SOFTWARE.
 }
 ```
 ```
-@article{wsol_eval_journal_submission,
-  title={Evaluation for Weakly Supervised Object Localization: Protocol, Metrics, and Datasets},
-  author={Choe, Junsuk and Oh, Seong Joon and Chun, Sanghyuk and Akata, Zeynep and Shim, Hyunjung},
-  journal={arXiv preprint arXiv:2007.04178},
-  year={2020}
+@ARTICLE {choe2022tpami,
+ author = {J. Choe and S. Oh and S. Chun and S. Lee and Z. Akata and H. Shim},
+ journal = {IEEE Transactions on Pattern Analysis &amp; Machine Intelligence},
+ title = {Evaluation for Weakly Supervised Object Localization: Protocol, Metrics, and Datasets},
+ year = {5555},
+ volume = {},
+ number = {01},
+ issn = {1939-3539},
+ pages = {1-1},
+ abstract = {Weakly-supervised object localization (WSOL) has gained popularity over the last years for its promise to train localization models with only image-level labels. Since the seminal WSOL work of class activation mapping (CAM), the field has focused on how to expand the attention regions to cover objects more broadly and localize them better. However, these strategies rely on full localization supervision for validating hyperparameters and model selection, which is in principle prohibited under the WSOL setup. In this paper, we argue that WSOL task is ill-posed with only image-level labels, and propose a new evaluation protocol where full supervision is limited to only a small held-out set not overlapping with the test set. We observe that, under our protocol, the five most recent WSOL methods have not made a major improvement over the CAM baseline. Moreover, we report that existing WSOL methods have not reached the few-shot learning baseline, where the full-supervision at validation time is used for model training instead. Based on our findings, we discuss some future directions for WSOL. Source code and dataset are available at https://github.com/clovaai/wsolevaluation.}
+ keywords = {location awareness;task analysis;training;protocols;measurement;predictive models;benchmark testing},
+ doi = {10.1109/TPAMI.2022.3169881},
+ publisher = {IEEE Computer Society},
+ address = {Los Alamitos, CA, USA},
+ month = {apr}
 }
 ```
