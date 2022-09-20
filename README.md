@@ -1,6 +1,6 @@
 ## Evaluating Weakly Supervised Object Localization Methods Right (CVPR 2020)
 
-[CVPR 2020 paper](https://arxiv.org/abs/2001.07437) | [Journal submission](https://arxiv.org/abs/2007.04178)
+[CVPR 2020 paper](https://arxiv.org/abs/2001.07437) | [TPAMI paper](https://arxiv.org/abs/2007.04178)
 
 Junsuk Choe<sup>1,3*</sup>, Seong Joon Oh<sup>2*</sup>, Seungho Lee<sup>1</sup>, 
 Sanghyuk Chun<sup>3</sup>, Zeynep Akata<sup>4</sup>, Hyunjung Shim<sup>1</sup>  
@@ -618,10 +618,13 @@ SOFTWARE.
 }
 ```
 ```
-@article{wsol_eval_journal_submission,
-  title={Evaluation for Weakly Supervised Object Localization: Protocol, Metrics, and Datasets},
-  author={Choe, Junsuk and Oh, Seong Joon and Chun, Sanghyuk and Akata, Zeynep and Shim, Hyunjung},
-  journal={arXiv preprint arXiv:2007.04178},
-  year={2020}
-}
+@ARTICLE{choe2022tpami,
+  author={Choe, Junsuk and Oh, Seong Joon and Chun, Sanghyuk and Lee, Seungho and Akata, Zeynep and Shim, Hyunjung},
+  journal={IEEE Transactions on Pattern Analysis and Machine Intelligence}, 
+  title={Evaluation for Weakly Supervised Object Localization: Protocol, Metrics, and Datasets}, 
+  year={2022},
+  volume={},
+  number={},
+  pages={1-1},
+  doi={10.1109/TPAMI.2022.3169881}}
 ```
